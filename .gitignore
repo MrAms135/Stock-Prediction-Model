@@ -1,0 +1,17 @@
+# Ignore Data
+data/
+results/
+logs/
+*.csv
+*.h5
+*.png
+
+# Ignore Python Cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Ignore Virtual Environment
+.venv/
+env/
+venv/
