@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
+from xgb_model import XGBStockPredictor
 
 # Import our modules
 from data_collection import download_stock_data, add_basic_features
@@ -186,80 +187,105 @@ def step6_evaluate_model(lstm_predictor, test_data, dates_test):
     return metrics, y_pred
 
 def main():
-    """
-    Main execution function
-    Runs the complete workflow from data download to model evaluation
-    """
-    print("\n" + "="*70)
-    print(" "*15 + "LSTM STOCK PREDICTION PIPELINE")
-    print(" "*20 + "NVIDIA (NVDA) EXAMPLE")
     print("="*70)
-    print(f"\nStarted at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("PHASE 2: HYBRID ENSEMBLE (LSTM + XGBoost) - NVDA")
+    print("="*70)
     
-    try:
-        # Setup
-        create_directories()
-        
-        # Step 1: Download data
-        df_raw = step1_download_data()
-        
-        # Step 2: Calculate indicators
-        df_processed = step2_add_indicators(df_raw)
-        
-        # Step 3: Prepare sequences
-        X, y, lstm_predictor = step3_prepare_sequences(df_processed)
-        
-        # Step 4: Split data
-        train_data, val_data, test_data, dates_test = step4_split_data(X, y, df_processed)
-        
-        # Step 5: Train model
-        history = step5_train_model(lstm_predictor, train_data, val_data)
-        
-        # Step 6: Evaluate
-        metrics, predictions = step6_evaluate_model(lstm_predictor, test_data, dates_test)
-        
-        # Summary
-        print("\n" + "="*70)
-        print("PIPELINE COMPLETED SUCCESSFULLY!")
-        print("="*70)
-        print("\n📊 RESULTS SUMMARY:")
-        print(f"  RMSE: {metrics['RMSE']:.6f}")
-        print(f"  MAE:  {metrics['MAE']:.6f}")
-        print(f"  R²:   {metrics['R2']:.6f}")
-        print(f"  Direction Accuracy: {metrics['Direction_Accuracy']*100:.2f}%")
-        
-        print("\n📁 FILES CREATED:")
-        print("  ✓ data/NVDA_raw.csv - Raw stock data")
-        print("  ✓ data/NVDA_processed.csv - Data with indicators")
-        print("  ✓ models/lstm_nvda/best_model.h5 - Trained LSTM model")
-        print("  ✓ results/lstm_metrics.csv - Evaluation metrics")
-        print("  ✓ results/figures/lstm_training_history.png")
-        print("  ✓ results/figures/lstm_predictions.png")
-        
-        print("\n🎯 NEXT STEPS:")
-        print("  1. Review the plots in results/figures/")
-        print("  2. Try adjusting hyperparameters in config.py")
-        print("  3. Add more features from technical_indicators.py")
-        print("  4. Build Transformer and LightGBM models")
-        print("  5. Create the ensemble!")
-        
-        print(f"\nCompleted at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print("="*70 + "\n")
-        
-        return lstm_predictor, metrics, predictions
-        
-    except Exception as e:
-        print(f"\n❌ ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return None, None, None
+    # 1. Setup & Data (Same as before)
+    create_directories()
+    df_raw = step1_download_data()
+    df_processed = step2_add_indicators(df_raw)
+    
+    # --- MODEL 1: LSTM (The Time Expert) ---
+    print("\nTraining Model 1: LSTM...")
+    X_lstm, y_lstm, lstm_model = step3_prepare_sequences(df_processed)
+    train_lstm, val_lstm, test_lstm, dates_test = step4_split_data(X_lstm, y_lstm, df_processed)
+    step5_train_model(lstm_model, train_lstm, val_lstm)
+    
+    # --- MODEL 2: XGBoost (The Technical Expert) ---
+    print("\nTraining Model 2: XGBoost...")
+    xgb_model = XGBStockPredictor()
+    
+    # Prepare tabular data (Different shape than LSTM!)
+    # We use the same 'Return' target
+    X_xgb, y_xgb, features = xgb_model.prepare_data(df_processed)
+    
+    # We must split XGB data exactly the same way as LSTM to align them
+    # We use the same indices/dates
+    train_size = len(train_lstm[0])
+    val_size = len(val_lstm[0])
+    
+    X_xgb_train = X_xgb[:train_size]
+    y_xgb_train = y_xgb[:train_size]
+    
+    X_xgb_val = X_xgb[train_size:train_size+val_size]
+    y_xgb_val = y_xgb[train_size:train_size+val_size]
+    
+    X_xgb_test = X_xgb[train_size+val_size:]
+    y_xgb_test = y_xgb[train_size+val_size:]
+    
+    # Train XGB
+    xgb_model.train(X_xgb_train, y_xgb_train, X_xgb_val, y_xgb_val)
+    
+    # --- ENSEMBLE: Combine Predictions ---
+    print("\n" + "="*70)
+    print("STEP 7: ENSEMBLE EVALUATION & COMPARISON")
+    print("="*70)
+    
+    # 1. Get raw predictions
+    pred_lstm = lstm_model.predict(test_lstm[0]).flatten()
+    pred_xgb = xgb_model.predict(X_xgb_test)
+    
+    # 2. ALIGNMENT: Trim all arrays to the shortest length
+    min_len = min(len(pred_lstm), len(pred_xgb))
+    
+    pred_lstm = pred_lstm[-min_len:]
+    pred_xgb = pred_xgb[-min_len:]
+    y_actual = test_lstm[1][-min_len:]
+    dates_aligned = dates_test[-min_len:]
+    
+    # 3. HYBRID: Average them (50/50 split)
+    pred_ensemble = (pred_lstm * 0.5) + (pred_xgb * 0.5)
+    
+    # 4. Define Helper for Metrics
+    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
+    def get_metrics(y_true, y_pred, name):
+        mse = mean_squared_error(y_true, y_pred)
+        rmse = np.sqrt(mse)
+        mae = mean_absolute_error(y_true, y_pred)
+        r2 = r2_score(y_true, y_pred)
+        
+        # Direction Accuracy: % of times the sign (up/down) matches
+        # We add 1e-8 to avoid division by zero or sign issues with exact 0
+        correct_direction = np.sum(np.sign(y_true) == np.sign(y_pred))
+        acc = correct_direction / len(y_true) * 100
+        
+        return {'Model': name, 'RMSE': rmse, 'MAE': mae, 'R2': r2, 'Accuracy': acc}
+
+    # 5. Calculate Metrics for All 3
+    m_lstm = get_metrics(y_actual, pred_lstm, "LSTM Only")
+    m_xgb = get_metrics(y_actual, pred_xgb, "XGBoost Only")
+    m_ens = get_metrics(y_actual, pred_ensemble, "Ensemble (Hybrid)")
+    
+    # 6. Print Comparison Table
+    results_df = pd.DataFrame([m_lstm, m_xgb, m_ens])
+    print("\n🏆 FINAL RESULTS COMPARISON:")
+    print(results_df.round(4).to_string(index=False))
+    
+    # 7. Plot Comparison
+    plt.figure(figsize=(14, 6))
+    plt.plot(dates_aligned, y_actual, label='Actual Returns', color='black', alpha=0.5)
+    plt.plot(dates_aligned, pred_ensemble, label='Ensemble', color='green', linewidth=2)
+    # Optional: Plot individual models faintly to see the difference
+    plt.plot(dates_aligned, pred_lstm, label='LSTM', color='blue', alpha=0.3, linestyle='--')
+    plt.plot(dates_aligned, pred_xgb, label='XGB', color='red', alpha=0.3, linestyle='--')
+    
+    plt.title('Phase 2: Ensemble vs. Individual Models')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.savefig('results/figures/ensemble_results.png')
+    print("\n✓ Saved plot to results/figures/ensemble_results.png")
 
 if __name__ == "__main__":
-    # Set random seeds for reproducibility
-    np.random.seed(42)
-    import tensorflow as tf
-    tf.random.set_seed(42)
-    
-    # Run the pipeline
-    model, metrics, predictions = main()
+    main()
