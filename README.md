@@ -1,30 +1,23 @@
 # Event-Aware Ensemble for Stock Prediction 📈
-**Phase 2 Status:** Hybrid Ensemble (LSTM + XGBoost) Complete
+**Current Status:** Phase 4 Complete (Multi-Stock Portfolio & Risk Metrics)
 
-A quantitative finance pipeline investigating if "Ensemble Learning" (combining multiple AI models) can predict stock movements better than individual models during market volatility.
-
----
-
-## 🎯 Current Progress: Phase 2 (Hybrid Architecture)
-We have successfully implemented a **Weighted Ensemble** that combines two distinct modeling philosophies:
-1.  **The "Time" Expert (LSTM):** A Deep Learning model that captures sequential patterns and long-term dependencies in price history.
-2.  **The "Logic" Expert (XGBoost):** A Gradient Boosting model that captures non-linear relationships between technical indicators (RSI, Bollinger Bands, Volume).
-
-### Key Features
-✅ **Multi-Model Fusion:** Averaging predictions from LSTM and XGBoost to reduce variance.
-✅ **Lag Reduction:** XGBoost helps correct the "lag" often seen in pure LSTM models.
-✅ **Dynamic Data Pipeline:** Automated download (Yahoo Finance), processing, and feature engineering.
-✅ **Comparative Evaluation:** Side-by-side metrics (RMSE, Accuracy) for LSTM vs. XGBoost vs. Ensemble.
+An advanced quantitative finance pipeline investigating if "Ensemble Learning" (combining LSTMs, XGBoost, and Time-Series Transformers) can predict stock movements better than individual models during market volatility, specifically analyzing the 2026 "SaaSapocalypse."
 
 ---
 
-## 🏗️ Architecture (Current)
+## 🎯 Phase 4: The Portfolio Loop & Risk Management
+We have upgraded the pipeline from a single-asset model to a fully automated **Multi-Stock Portfolio Loop**. The ensemble now independently evaluates distinct market sectors to prove it learns universal market mechanics rather than overfitting to a single stock.
 
-```mermaid
-graph TD
-    Data[Input Data: OHLCV] --> TI[Tech Indicators]
-    TI --> LSTM[Model A: LSTM]
-    TI --> XGB[Model B: XGBoost]
-    LSTM -->|Prediction A| Avg(Weighted Average)
-    XGB -->|Prediction B| Avg
-    Avg --> Final[Final Prediction]
+### The Research Subjects
+The portfolio is divided into two distinct macroeconomic groups to analyze the impact of autonomous AI agents on the tech sector:
+1. **The AI Winners (Infrastructure):** NVDA, MSFT, GOOGL
+2. **The SaaS Victims (Software):** CRM, ADBE
+
+### Key Innovations
+✅ **Automated Portfolio Scaling:** Dynamically loops through tickers, clearing deep learning memory states sequentially to process entire sectors autonomously.
+✅ **Maximum Drawdown (MDD) Tracking:** Upgraded the backtester to measure risk-adjusted performance by calculating the most severe peak-to-trough portfolio drops.
+✅ **Crash Mitigation:** Demonstrated the ensemble's ability to act as a capital shield, successfully reducing the drawdown of crashing SaaS stocks compared to a Buy & Hold benchmark.
+
+---
+
+## 📊 Performance Snapshot (Phase 4)
