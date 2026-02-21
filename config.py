@@ -296,3 +296,14 @@ def print_config():
 
 if __name__ == "__main__":
     print_config()
+
+# Transformer Hyperparameters
+TRANSFORMER_CONFIG = {
+    'head_size': 256,     # Size of attention head
+    'num_heads': 4,       # Number of attention heads (Parallel focus points)
+    'ff_dim': 4,          # Feed-forward layer size
+    'dropout': 0.25,      # Dropout rate
+    'learning_rate': 0.0001,
+    'epochs': 80,
+    'batch_size': 64
+}
