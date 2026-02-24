@@ -1,17 +1,26 @@
-# Ignore Data
-data/
-results/
-logs/
-*.csv
-*.h5
-*.png
-
-# Ignore Python Cache
+# Python Cache
 __pycache__/
-*.pyc
-.ipynb_checkpoints/
+*.py[cod]
+*$py.class
 
-# Ignore Virtual Environment
+# Virtual Environments (Never upload these, they are massive!)
+venv/
 .venv/
 env/
-venv/
+
+# OS and IDE generated files
+.DS_Store
+.vscode/
+.idea/
+
+# Environment Variables & Secrets
+.env
+secrets.json
+
+# Project Specific: Heavy Data and Models
+# (This ignores the files inside, but keeps the folders)
+data/*.csv
+models/*.h5
+models/*.keras
+models/*.pt
+logs/*.log

@@ -1,0 +1,6 @@
+Category,Ticker,Accuracy,Strat_Return_%,Bench_Return_%
+AI_Winners,NVDA,46.96,20.98,74.78
+AI_Winners,MSFT,50.87,23.92,9.3
+AI_Winners,GOOGL,46.09,-1.07,98.25
+SaaS_Victims,CRM,54.78,-14.37,-29.51
+SaaS_Victims,ADBE,47.39,-37.92,-38.45

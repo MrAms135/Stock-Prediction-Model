@@ -1,0 +1,11 @@
+Category,Ticker,Accuracy,Strat_Return_%,Bench_Return_%,Strat_MDD_%,Bench_MDD_%
+AI_Winners,NVDA,52.79,31.93,27.67,-31.58,-33.87
+AI_Winners,MSFT,49.07,10.5,-10.14,-12.14,-27.24
+AI_Winners,GOOGL,46.47,-26.15,53.57,-41.52,-29.81
+AI_Winners,AMD,47.58,-39.73,65.29,-59.82,-36.33
+AI_Winners,PLTR,50.3,2.98,-5.82,-12.16,-37.67
+SaaS_Victims,CRM,50.19,4.57,-44.27,-7.23,-48.47
+SaaS_Victims,ADBE,46.84,-30.73,-40.72,-38.68,-44.59
+SaaS_Victims,WDAY,51.3,8.22,-45.15,-11.77,-49.6
+SaaS_Victims,NOW,47.58,-30.32,-52.67,-35.12,-57.03
+SaaS_Victims,SNOW,52.1,-12.07,-15.47,-32.2,-43.45
